@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BAD — Bridge Struck</title>
   <link rel="icon" href="data:," />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@sb/sb-js@2"></script>
   <style>
 :root{
   --bg:#050816;
@@ -111,7 +111,7 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
   <div class="toast" id="toast"></div>
 
 <script>
-  const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
+  const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.sb.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -127,7 +127,7 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
     const bridge_id = qp("bridge_id");
     if(!bridge_id){ $("sub").textContent = "Missing bridge_id"; return; }
 
-    const { data: b, error: e1 } = await supabase
+    const { data: b, error: e1 } = await sb
       .from("bad_bridges")
       .select("id, elr, bridge_number, bridge_name, location, mileage, over, highway_authority")
       .eq("id", bridge_id).single();
@@ -140,7 +140,7 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
     $("pMileage").textContent = b.mileage ? `Mileage: ${b.mileage}` : "Mileage: (blank)";
     $("pAuthority").textContent = b.highway_authority ? `Authority: ${b.highway_authority}` : "Authority: (blank)";
 
-    const { data: lines, error: e2 } = await supabase
+    const { data: lines, error: e2 } = await sb
       .from("bad_bridge_lines")
       .select("line_name, line_classification, protecting_signals, workstation")
       .eq("bridge_id", bridge_id);
@@ -164,7 +164,7 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
       published_at: publish ? new Date().toISOString() : null
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("bad_incidents")
       .insert(payload).select("id").single();
     if(error){ toast(error.message, 8000); return; }
