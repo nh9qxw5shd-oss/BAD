@@ -320,8 +320,6 @@
 
             <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center">
               <span class="pill disp disp-na" id="dDispPill">Dispensation: —</span>
-              <span class="pill" id="dLV" style="display:none">LV: —</span>
-              <span class="pill" id="dBSE" style="display:none">BSE: —</span>
             </div>
             </div>
 
@@ -501,14 +499,23 @@
   }
 
   function getDispensations(b){
-    // Prefer the dedicated column (derived during seeding), fallback to raw_record fuzzy match.
-    const col = String(b?.dispensation ?? "").trim();
-    if(col) return Array.from(new Set(splitList(col).map(x=>x.trim()).filter(Boolean)));
-
-    const raw = b?.raw_record || {};
-    const lc = pickFieldFuzzy(raw, ["dispensation","disp","line class","classification","restriction","overheight","oha"]);
-    const list = splitList(lc);
-    return Array.from(new Set(list.map(x=>x.trim()).filter(Boolean)));
+    // New structure: per-line detail lives in raw_records (JSON array)
+    // Each element should contain 'Line Classification'. We summarise across all lines.
+    const arr = Array.isArray(b?.raw_records) ? b.raw_records : [];
+    const vals = [];
+    for(const obj of arr){
+      if(!obj || typeof obj !== "object") continue;
+      const v = obj["Line Classification"] ?? obj["Line classification"] ?? obj["classification"] ?? obj["Class"] ?? "";
+      const s = String(v||"").trim();
+      if(s) vals.push(s);
+    }
+    // Fallback: legacy/bridge-level classification in raw_record (older seed)
+    if(vals.length===0){
+      const raw = b?.raw_record || {};
+      const lc = pickFieldFuzzy(raw, ["line class","classification","dispensation","restriction","overheight","oha"]);
+      vals.push(...splitList(lc));
+    }
+    return Array.from(new Set(vals.map(x=>String(x).trim()).filter(Boolean)));
   }
 
   function dispSummary(b){
@@ -543,26 +550,35 @@
   function splitLines(val){
     const s = String(val||"").replace(/\r/g,"").trim();
     if(!s) return [];
-    // Split on newlines, also tolerate pipe-delimited
-    const parts = s.split("\n").flatMap(x=>x.split("|")).map(x=>x.trim()).filter(Boolean);
+    // Split on newlines and common separators seen in flattened appendices
+    // Supports: newline, |, ;, comma, " / ", and bullet-ish prefixes.
+    const parts = s
+      .split("\n")
+      .flatMap(x=>x.split("|"))
+      .flatMap(x=>x.split(";"))
+      .flatMap(x=>x.split(/,(?!\s*\d)/))
+      .flatMap(x=>x.split(/\s+\/\s+/g))
+      .map(x=>x.replace(/^[-•\u2022]\s*/,"").trim())
+      .filter(Boolean);
     return parts;
   }
+
   function renderPretty(b){
     const wrap = $("dPretty");
     if(!wrap) return;
+
     const raw = b.raw_record || {};
     const km = buildKeyMap(raw);
 
     const lv = pickRaw(raw, km, ["LV","Level crossing","Lv"]);
     const bse = pickRaw(raw, km, ["BSE","Bridge Strike Equipped","Bse"]);
     const workstation = pickRaw(raw, km, ["Signal box / Workstation","Signal box / Workstation ","Signal box/Workstation","Workstation","Signal Box","Signal box"]);
-    const lines = pickRaw(raw, km, ["Lines On/Under the Bridge","Lines on/under the bridge","Lines On/Under Bridge","Lines"]);
-    const cls = pickRaw(raw, km, ["Line Classification","LineClassification","Line classification"]);
-    const sigs = pickRaw(raw, km, ["Protecting Signals","Protecting\nSignals","ProtectingSignals","Protecting signals"]);
+
+    const arr = Array.isArray(b?.raw_records) ? b.raw_records : [];
 
     const blocks = [];
 
-    // Quick chips
+    // chips
     const chips = [];
     if(String(lv||"").trim()) chips.push(`<span class="chip">LV: <strong>${escapeHtml(String(lv).trim())}</strong></span>`);
     if(String(bse||"").trim()) chips.push(`<span class="chip">BSE: <strong>${escapeHtml(String(bse).trim())}</strong></span>`);
@@ -570,8 +586,8 @@
       blocks.push(`<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">${chips.join("")}</div>`);
     }
 
-    // Key-value rows
     const rows = [];
+
     const addRow = (k, v, multiline=false)=>{
       const s = String(v||"").trim();
       if(!s) return;
@@ -588,17 +604,56 @@
     };
 
     addRow("Workstation", workstation, false);
-    addRow("Lines on/under bridge", lines, true);
-    addRow("Line classification", cls, true);
-    addRow("Protecting signals", sigs, true);
 
-    // If none of the above exists, show a friendly note
-    if(rows.length===0){
-      wrap.innerHTML = `<div class="muted small">No structured fields found in raw_record for lines/classification/signals. Raw JSON below still contains the source.</div>`;
+    if(arr.length){
+      // Build per-line list with inline disp pill and signals
+      const lis = arr.map(obj=>{
+        const line = String(obj?.Line ?? obj?.line ?? "").trim() || "—";
+        const cls = String(obj?.["Line Classification"] ?? obj?.["Line classification"] ?? obj?.classification ?? "").trim();
+        const sigs = String(obj?.["Protecting Signals (combined)"] ?? obj?.["Protecting Signals"] ?? obj?.signals ?? "").trim();
+
+        const d = dispToClass(cls);
+        const pill = cls
+          ? `<span class="pill disp ${d.cls}" style="margin-left:10px">${escapeHtml(d.label)}</span>`
+          : `<span class="pill disp disp-na" style="margin-left:10px">—</span>`;
+
+        const sigHtml = sigs ? `<div class="small muted" style="margin-top:3px">Signals: ${escapeHtml(sigs)}</div>` : "";
+
+        return `<li style="margin:6px 0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <span>${escapeHtml(line)}</span>
+            <span style="flex:0 0 auto">${pill}</span>
+          </div>
+          ${sigHtml}
+        </li>`;
+      }).join("");
+
+      rows.push(`
+        <div class="r">
+          <div class="k">Lines on/under bridge</div>
+          <div class="v">
+            <ul style="margin:0; padding-left:18px">${lis}</ul>
+          </div>
+        </div>
+      `);
+    }else{
+      // Legacy fallback if raw_records not present
+      const lines = pickRaw(raw, km, ["Lines On/Under the Bridge","Lines on/under the bridge","Lines On/Under Bridge","Lines"]);
+      const cls = pickRaw(raw, km, ["Line Classification","LineClassification","Line classification"]);
+      const sigs = pickRaw(raw, km, ["Protecting Signals","Protecting\nSignals","ProtectingSignals","Protecting signals"]);
+      addRow("Lines on/under bridge", lines, true);
+      addRow("Line classification", cls, true);
+      addRow("Protecting signals", sigs, true);
+    }
+
+    if(rows.length===0 && blocks.length===0){
+      wrap.innerHTML = `<div class="muted small">No structured fields found.</div>`;
       return;
     }
 
-    blocks.push(`<div class="kvtable">${rows.join("")}</div>`);
+    if(rows.length){
+      blocks.push(`<div class="kvtable">${rows.join("")}</div>`);
+    }
     wrap.innerHTML = blocks.join("");
   }
 
@@ -652,23 +707,6 @@
       dispEl.textContent = `Dispensation: ${disp.label}`;
     }
 
-    const lv = pickField(raw, ["lv"]);
-    const bse = pickField(raw, ["bse"]);
-
-    const lvEl = document.getElementById("dLV");
-    const bseEl = document.getElementById("dBSE");
-
-    if(lvEl){
-      const v = String(lv||"").trim();
-      lvEl.style.display = v ? "" : "none";
-      lvEl.textContent = v ? `LV: ${v}` : "";
-    }
-    if(bseEl){
-      const v = String(bse||"").trim();
-      bseEl.style.display = v ? "" : "none";
-      bseEl.textContent = v ? `BSE: ${v}` : "";
-    }
-
     // Populate admin form if unlocked
     if(state.adminUnlocked){
       fillAdminForm(b);
@@ -715,8 +753,7 @@
         // Fuzzy key match: look for keys containing these hints.
         b.over = b.over || pickFieldFuzzy(raw, ["over", "carriageway", "road", "highway"]);
         b.highway_authority = b.highway_authority || pickFieldFuzzy(raw, ["highway", "authority", "ha"]);
-        // Dispensation: prefer column, otherwise derive from raw_record with fuzzy hints.
-        b.dispensation = String(b.dispensation ?? "").trim() || pickFieldFuzzy(raw, ["dispensation", "disp", "restriction", "overheight", "oha"]);
+        // No dedicated dispensation column; summary is derived from raw_records (per-line classifications).
       });
 
       $("kpiBridges").textContent = String(state.bridges.length);
@@ -743,6 +780,15 @@
     if((b.mileage||"").trim()) out.push(`Mileage: ${(b.mileage||"").trim()}`);
     if((b.over||"").trim()) out.push(`Over: ${(b.over||"").trim()}`);
     if((b.highway_authority||"").trim()) out.push(`Highway Authority: ${(b.highway_authority||"").trim()}`);
+    const rr = Array.isArray(b.raw_records) ? b.raw_records : [];
+    if(rr.length){
+      out.push("Lines:");
+      rr.forEach(x=>{
+        const line = String(x?.Line ?? "").trim();
+        const cls = String(x?.["Line Classification"] ?? "").trim();
+        out.push(`- ${line}${cls?` (${cls})`:""}`);
+      });
+    }
     const txt = out.join("\n");
 
     navigator.clipboard.writeText(txt)
@@ -824,6 +870,8 @@
         over: $("aOver").value.trim(),
         highway_authority: $("aHA").value.trim(),
         raw_record,
+        // Keep existing per-line array unless user is inserting a brand new bridge.
+        raw_records: Array.isArray(state.selected?.raw_records) ? state.selected.raw_records : [],
         updated_at: new Date().toISOString()
       };
 
@@ -831,7 +879,7 @@
       const { data, error } = await sb
         .from("bad_bridges")
         .upsert(payload, { onConflict: "elr,bridge_number" })
-        .select("id,elr,bridge_number,bridge_name,location,mileage,dispensation,raw_record,updated_at")
+        .select("id,elr,bridge_number,bridge_name,location,mileage,raw_record,raw_records,updated_at")
         .single();
 
       if(error) throw error;
