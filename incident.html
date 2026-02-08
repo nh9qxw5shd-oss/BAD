@@ -7,87 +7,99 @@
   <link rel="icon" href="data:," />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-:root{
-  --bg:#050816;
-  --card:rgba(11,18,41,.86);
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --line:rgba(148,163,184,.22);
-  --shadow:0 20px 55px rgba(0,0,0,.45);
-  --radius:18px;
-  --focus:rgba(99,102,241,.25);
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:radial-gradient(1200px 700px at 20% 10%,#0b1b4a 0%,var(--bg) 60%);
-  color:var(--text)
-}
-.wrap{max-width:980px;margin:0 auto;padding:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
-h1{margin:0 0 6px 0;font-size:18px;letter-spacing:.2px}
-.muted{color:var(--muted);font-size:12px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:720px){.grid{grid-template-columns:1fr}}
-label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px 2px}
-input,textarea{
-  width:100%;
-  padding:10px 11px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:rgba(11,18,41,.55);
-  color:var(--text);
-  outline:none
-}
-input::placeholder,textarea::placeholder{color:rgba(148,163,184,.7)}
-input:focus,textarea:focus{box-shadow:0 0 0 3px var(--focus);border-color:rgba(99,102,241,.65)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{
-  border:1px solid var(--line);
-  background:transparent;
-  color:var(--text);
-  padding:10px 12px;border-radius:14px;cursor:pointer;
-  font-weight:800;font-size:13px;display:inline-flex;gap:8px;align-items:center
-}
-.btn.primary{background:rgba(99,102,241,.25);border-color:rgba(99,102,241,.55)}
-.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35)}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
-th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky;top:0;backdrop-filter:blur(8px)}
-.pill{padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted);background:rgba(11,18,41,.55)}
-.toast{
-  position:fixed;right:14px;bottom:14px;
-  background:rgba(99,102,241,.25);
-  border:1px solid rgba(99,102,241,.55);
-  color:var(--text);
-  padding:12px 14px;border-radius:14px;
-  box-shadow:var(--shadow);display:none
-}
-.toast.show{display:block}
-</style>
+    :root{
+      --bg:#f3f6fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:rgba(15,23,42,.10);
+      --shadow:0 18px 45px rgba(15,23,42,.10);
+      --radius:18px;
+      --focus:rgba(59,130,246,.20);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:radial-gradient(1200px 700px at 20% 10%,#ffffff 0%, var(--bg) 55%);
+      color:var(--text);
+    }
+    .wrap{max-width:1040px;margin:0 auto;padding:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:14px}
+    h1{margin:0 0 6px 0;font-size:18px;letter-spacing:.2px}
+    .muted{color:var(--muted);font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:820px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px 2px}
+    input,textarea{
+      width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:12px;
+      background:#fff;color:var(--text);outline:none
+    }
+    input::placeholder,textarea::placeholder{color:rgba(100,116,139,.75)}
+    input:focus,textarea:focus{box-shadow:0 0 0 3px var(--focus);border-color:rgba(59,130,246,.55)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      border:1px solid var(--line);background:#fff;color:var(--text);
+      padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:800;font-size:13px;
+      display:inline-flex;gap:8px;align-items:center
+    }
+    .btn.primary{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35)}
+    .btn.danger{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.25)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+    th{color:var(--muted);font-size:12px;background:rgba(243,246,251,.9);position:sticky;top:0}
+    .pill{padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
+      color:var(--muted);background:rgba(243,246,251,.8)}
+    .pill.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.30);color:#065f46}
+    .pill.amber{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.30);color:#92400e}
+    .pill.red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.28);color:#991b1b}
+    .pill.na{background:rgba(100,116,139,.10);border-color:rgba(100,116,139,.22);color:#475569}
+    .toast{
+      position:fixed;right:14px;bottom:14px;background:rgba(59,130,246,.12);
+      border:1px solid rgba(59,130,246,.28);color:var(--text);
+      padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);display:none;max-width:520px
+    }
+    .toast.show{display:block}
+    .topbar{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+    .chiprow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .rightActions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  </style>
 </head>
 <body>
   <div class="wrap">
+
     <div class="card">
-      <h1 id="title">Bridge Struck</h1>
-      <div class="muted" id="sub">Loading bridge…</div>
-      <div class="row" style="margin-top:10px">
-        <span class="pill" id="pOver"></span>
-        <span class="pill" id="pMileage"></span>
-        <span class="pill" id="pAuthority"></span>
+      <div class="topbar">
+        <div>
+          <h1 id="title">Bridge Struck</h1>
+          <div class="muted" id="sub">Loading bridge…</div>
+          <div class="chiprow">
+            <span class="pill" id="pOver">Over: —</span>
+            <span class="pill" id="pMileage">Mileage: —</span>
+            <span class="pill" id="pAuthority">Authority: —</span>
+            <span class="pill" id="pHeadline">Dispensation: —</span>
+          </div>
+        </div>
+        <div class="rightActions">
+          <a class="btn" id="btnBack" href="./index_BAD_user_focused_v12_raw_records_lines_v12_1_no_dup_LVBSE.html" title="Back to BAD">← Back</a>
+          <button class="btn" id="btnCopy" title="Copy a quick log line">Copy summary</button>
+        </div>
       </div>
+
       <div style="overflow:auto">
         <table>
-          <thead><tr><th>Line</th><th>Class</th><th>Signals</th><th>Workstation</th></tr></thead>
+          <thead><tr><th>Line</th><th>Dispensation</th><th>Signals</th></tr></thead>
           <tbody id="lines"></tbody>
         </table>
       </div>
+      <div class="muted" id="note" style="margin-top:10px"></div>
     </div>
 
     <div class="card" style="margin-top:12px">
       <h1>Create / publish incident</h1>
-      <div class="muted">Publishing drives BAD-AS alerts.</div>
+      <div class="muted">Publishing drives BAD-AS alerts. Drafts do not alert.</div>
 
       <div class="grid" style="margin-top:10px">
         <div><label>FMS reference</label><input id="fms" placeholder="e.g. FMS-12345" /></div>
@@ -120,38 +132,98 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
   function qp(name){ return new URLSearchParams(location.search).get(name); }
   function esc(s){ return (s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
 
+  function normCls(s){
+    const v=String(s||"").trim();
+    if(!v) return "";
+    const lc=v.toLowerCase();
+    if(lc.includes("not")) return "na";
+    if(lc.includes("double")) return "amber";
+    if(lc.includes("amber")) return "amber";
+    if(lc.includes("red")) return "red";
+    if(lc.includes("green")) return "green";
+    return "";
+  }
+
+  function headlineFromLines(over, arr){
+    const ov = String(over||"").trim().toLowerCase();
+    if(ov==="rail") return {label:"Not applicable", cls:"na"};
+    const vals=(arr||[]).map(x=>String(x?.["Line Classification"]||"").trim()).filter(Boolean);
+    const uniq=[...new Set(vals)];
+    if(uniq.length===0) return {label:"Review", cls:"na"};
+    if(uniq.length===1) return {label:uniq[0], cls:(normCls(uniq[0])||"na")};
+    return {label:`Mixed (${uniq.slice(0,4).join(", ")}${uniq.length>4?"…":""})`, cls:"amber"};
+  }
+
+  function pillHTML(label){
+    const c = normCls(label);
+    const cls = c ? `pill ${c}` : "pill";
+    return `<span class="${cls}">${esc(label)}</span>`;
+  }
+
   let bridge=null;
   let incidentId=null;
 
   async function loadBridge(){
+    const elr = qp("elr");
+    const bridge_number = qp("bridge_number");
     const bridge_id = qp("bridge_id");
-    if(!bridge_id){ $("sub").textContent = "Missing bridge_id"; return; }
 
-    const { data: b, error: e1 } = await sb
-      .from("bad_bridges")
-      .select("id, elr, bridge_number, bridge_name, location, mileage, over, highway_authority")
-      .eq("id", bridge_id).single();
+    let q = sb.from("bad_bridges").select("id, elr, bridge_number, bridge_name, location, mileage, over, highway_authority, raw_record, raw_records");
+    if(bridge_id) q = q.eq("id", bridge_id).single();
+    else if(elr && bridge_number) q = q.eq("elr", elr).eq("bridge_number", bridge_number).single();
+    else { $("sub").textContent = "Missing bridge reference (bridge_id or elr+bridge_number)."; return; }
+
+    const { data: b, error: e1 } = await q;
     if(e1){ $("sub").textContent = e1.message; return; }
     bridge=b;
 
-    $("title").textContent = `Bridge Struck — ${b.elr} ${b.bridge_number}`;
+    $("title").textContent = `Bridge Struck — ${b.elr||""} ${b.bridge_number||""}`;
     $("sub").textContent = [b.bridge_name,b.location].filter(Boolean).join(" · ");
+
     $("pOver").textContent = b.over ? `Over: ${b.over}` : "Over: (blank)";
     $("pMileage").textContent = b.mileage ? `Mileage: ${b.mileage}` : "Mileage: (blank)";
     $("pAuthority").textContent = b.highway_authority ? `Authority: ${b.highway_authority}` : "Authority: (blank)";
 
-    const { data: lines, error: e2 } = await sb
-      .from("bad_bridge_lines")
-      .select("line_name, line_classification, protecting_signals, workstation")
-      .eq("bridge_id", bridge_id);
-    if(e2){ toast(e2.message, 6000); return; }
+    const linesArr = Array.isArray(b.raw_records) ? b.raw_records : [];
+    const headline = headlineFromLines(b.over, linesArr);
+    $("pHeadline").className = `pill ${headline.cls||"na"}`;
+    $("pHeadline").textContent = `Dispensation: ${headline.label}`;
 
-    $("lines").innerHTML = (lines||[]).map(r =>
-      `<tr><td>${esc(r.line_name||"")}</td><td>${esc(r.line_classification||"")}</td><td>${esc(r.protecting_signals||"")}</td><td>${esc(r.workstation||"")}</td></tr>`
-    ).join("");
+    $("lines").innerHTML = (linesArr||[]).map(r => {
+      const ln = r?.["Line"] || "";
+      const cls = r?.["Line Classification"] || "Review";
+      const sig = r?.["Protecting Signals (combined)"] || "";
+      return `<tr>
+        <td>${esc(ln)}</td>
+        <td>${pillHTML(cls)}</td>
+        <td class="muted">${esc(sig)}</td>
+      </tr>`;
+    }).join("");
+
+    const rr = b.raw_record || {};
+    const ws = rr["Signal box / Workstation"] || rr.workstation || "";
+    $("note").textContent = ws ? `Workstation: ${ws}` : "";
+
+    const { data: open, error: eOpen } = await sb
+      .from("bad_incidents")
+      .select("id, status, summary, details, fms_ref, ccil_ref, published_at")
+      .eq("bridge_id", b.id)
+      .eq("status","open")
+      .order("created_at",{ascending:false})
+      .limit(1);
+
+    if(!eOpen && open && open.length){
+      const inc=open[0];
+      incidentId=inc.id;
+      $("summary").value = inc.summary || "";
+      $("details").value = inc.details || "";
+      $("fms").value = inc.fms_ref || "";
+      $("ccil").value = inc.ccil_ref || "";
+      $("state").textContent = inc.published_at ? "Open (published)" : "Open (draft)";
+    }
   }
 
-  async function createIncident(publish){
+  async function upsertIncident(publish){
     if(!bridge) return;
     const payload = {
       bridge_id: bridge.id,
@@ -164,26 +236,78 @@ th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky
       published_at: publish ? new Date().toISOString() : null
     };
 
-    const { data, error } = await sb
-      .from("bad_incidents")
-      .insert(payload).select("id").single();
+    if(incidentId){
+      const { error } = await sb.from("bad_incidents").update(payload).eq("id", incidentId);
+      if(error){ toast(error.message, 8000); return; }
+      $("state").textContent = publish ? "Open (published)" : "Open (draft)";
+      toast(publish ? "Alert published (updated)" : "Draft saved (updated)");
+      return;
+    }
+
+    const { data, error } = await sb.from("bad_incidents").insert(payload).select("id").single();
     if(error){ toast(error.message, 8000); return; }
     incidentId=data.id;
-    $("state").textContent = publish ? `Published (${incidentId})` : `Draft (${incidentId})`;
+    $("state").textContent = publish ? "Open (published)" : "Open (draft)";
     toast(publish ? "Alert published" : "Draft saved");
   }
 
   async function closeIncident(){
-    if(!incidentId){ toast("No incident created yet"); return; }
+    if(!incidentId){ toast("No incident to close (publish or draft first)"); return; }
     const { error } = await sb.from("bad_incidents").update({ status:"closed" }).eq("id", incidentId);
     if(error){ toast(error.message, 6000); return; }
     $("state").textContent = "Closed";
     toast("Incident closed");
   }
 
-  $("btnPublish").addEventListener("click", ()=>createIncident(true));
-  $("btnSaveDraft").addEventListener("click", ()=>createIncident(false));
+  function buildCopyText(){
+    if(!bridge) return "";
+    const rr = bridge.raw_record || {};
+    const linesArr = Array.isArray(bridge.raw_records) ? bridge.raw_records : [];
+    const headline = headlineFromLines(bridge.over, linesArr);
+
+    const bits=[];
+    bits.push(`BRIDGE STRUCK — ${bridge.elr||""} ${bridge.bridge_number||""}`);
+    const place=[bridge.bridge_name, bridge.location].filter(Boolean).join(" · ");
+    if(place) bits.push(place);
+    if(bridge.over) bits.push(`Over: ${bridge.over}`);
+    if(bridge.mileage) bits.push(`Mileage: ${bridge.mileage}`);
+    if(bridge.highway_authority) bits.push(`Highway Authority: ${bridge.highway_authority}`);
+    const ws = rr["Signal box / Workstation"] || "";
+    if(ws) bits.push(`Workstation: ${ws}`);
+    bits.push(`Dispensation: ${headline.label}`);
+    bits.push("");
+    bits.push("Lines:");
+    for(const r of (linesArr||[])){
+      const ln=r?.["Line"]||"";
+      const cls=r?.["Line Classification"]||"Review";
+      const sig=r?.["Protecting Signals (combined)"]||"";
+      bits.push(`- ${ln}: ${cls}${sig?` (Signals: ${sig})`:``}`);
+    }
+    const s=$("summary").value.trim();
+    const d=$("details").value.trim();
+    if(s||d){
+      bits.push("");
+      if(s) bits.push(`Summary: ${s}`);
+      if(d) bits.push(`Details: ${d}`);
+    }
+    const f=$("fms").value.trim();
+    const c=$("ccil").value.trim();
+    if(f||c){
+      bits.push("");
+      if(f) bits.push(`FMS: ${f}`);
+      if(c) bits.push(`CCIL: ${c}`);
+    }
+    return bits.join("\n");
+  }
+
+  $("btnPublish").addEventListener("click", ()=>upsertIncident(true));
+  $("btnSaveDraft").addEventListener("click", ()=>upsertIncident(false));
   $("btnClose").addEventListener("click", closeIncident);
+  $("btnCopy").addEventListener("click", async ()=>{
+    try{ await navigator.clipboard.writeText(buildCopyText()); toast("Copied"); }
+    catch{ toast("Copy failed (browser permissions)"); }
+  });
+
   loadBridge();
 </script>
 </body>
