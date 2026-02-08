@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BAD — Bridge Asset Database</title>
+  <link rel="icon" href="data:," />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+:root{
+  --bg:#050816;
+  --card:rgba(11,18,41,.86);
+  --cardSolid:#0b1229;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --line:rgba(148,163,184,.22);
+  --shadow:0 20px 55px rgba(0,0,0,.45);
+  --radius:18px;
+  --focus:rgba(99,102,241,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:radial-gradient(1200px 700px at 20% 10%,#0b1b4a 0%,var(--bg) 60%);
+  color:var(--text)
+}
+header{
+  position:sticky;top:0;z-index:5;
+  background:rgba(5,8,22,.72);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line)
+}
+.wrap{max-width:1200px;margin:0 auto;padding:12px 14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{margin:0;font-size:18px;letter-spacing:.4px}
+.brand .tag{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:8px;margin-left:auto}
+.tab{
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--text);
+  padding:8px 10px;border-radius:999px;font-size:13px;cursor:pointer
+}
+.tab.active{border-color:rgba(99,102,241,.55);box-shadow:0 0 0 3px var(--focus)}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow)
+}
+.controls{padding:12px}
+input,select,textarea{
+  width:100%;
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(11,18,41,.55);
+  color:var(--text);
+  outline:none
+}
+select{appearance:none}
+input::placeholder,textarea::placeholder{color:rgba(148,163,184,.7)}
+input:focus,select:focus,textarea:focus{
+  box-shadow:0 0 0 3px var(--focus);
+  border-color:rgba(99,102,241,.65)
+}
+.grid{display:grid;grid-template-columns:1.3fr .9fr .9fr .9fr;gap:10px}
+@media (max-width:980px){.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.btn{
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--text);
+  padding:10px 12px;border-radius:14px;cursor:pointer;
+  font-weight:700;font-size:13px;display:inline-flex;gap:8px;align-items:center
+}
+.btn.primary{background:rgba(99,102,241,.25);border-color:rgba(99,102,241,.55)}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35)}
+.btn.ghost{background:transparent}
+.pill{
+  padding:5px 10px;border-radius:999px;font-size:12px;
+  border:1px solid var(--line);
+  color:var(--muted);
+  background:rgba(11,18,41,.55)
+}
+.count{margin-left:auto;color:var(--muted);font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{
+  position:sticky;top:126px;
+  background:rgba(5,8,22,.80);
+  backdrop-filter:blur(8px);
+  text-align:left;font-size:12px;color:var(--muted);letter-spacing:.3px
+}
+tr:hover td{background:rgba(148,163,184,.06)}
+td.small{color:var(--muted);font-size:12px}
+.hidden{display:none !important}
+.kpi{display:flex;gap:8px;flex-wrap:wrap}
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:20
+}
+.modal.show{display:flex}
+.sheet{
+  width:min(1100px,100%);
+  background:rgba(11,18,41,.92);
+  border-radius:22px;
+  border:1px solid var(--line);
+  box-shadow:0 30px 80px rgba(0,0,0,.55);
+  max-height:92vh;overflow:auto
+}
+.sheetHead{
+  padding:14px 14px 10px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;
+  position:sticky;top:0;
+  background:rgba(5,8,22,.82);
+  backdrop-filter:blur(10px)
+}
+.sheetHead h2{margin:0;font-size:18px}
+.sheetHead .sub{font-size:12px;color:var(--muted)}
+.sheetBody{padding:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px 2px}
+.toast{
+  position:fixed;right:14px;bottom:14px;z-index:30;
+  background:rgba(99,102,241,.25);
+  border:1px solid rgba(99,102,241,.55);
+  color:var(--text);
+  padding:12px 14px;border-radius:14px;
+  box-shadow:var(--shadow);display:none
+}
+.toast.show{display:block}
+.hint{font-size:12px;color:var(--muted)}
+hr{border:none;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="row">
+      <div class="brand"><h1>BAD</h1><div class="tag">Bridge Asset Database</div></div>
+      <div class="tabs">
+        <button class="tab active" id="tabLookup">Lookup</button>
+        <button class="tab" id="tabAdmin">Admin</button>
+      </div>
+      <div class="count" id="status">Not connected</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="panelLookup" class="card">
+    <div class="controls">
+      <div class="grid">
+        <div>
+          <input id="q" placeholder="Search ELR, bridge no, name, location, mileage, over, lines, signals..." />
+          <div class="hint" style="margin-top:6px">Tip: type <strong>ELR + number</strong> like <strong>NSS 9</strong>.</div>
+        </div>
+        <div><select id="filterOver"><option value="">Over (all)</option></select></div>
+        <div><select id="filterAuthority"><option value="">Highway authority (all)</option></select></div>
+        <div class="row" style="justify-content:flex-end">
+          <span class="pill" id="kpiBridges"><strong>0</strong> bridges</span>
+          <span class="pill" id="kpiLines"><strong>0</strong> line rows</span>
+          <button class="btn" id="btnRefresh">Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="overflow:auto;border-top:1px solid var(--line)">
+      <table>
+        <thead>
+          <tr>
+            <th style="min-width:80px">ELR</th>
+            <th style="min-width:95px">Bridge No</th>
+            <th style="min-width:220px">Name</th>
+            <th style="min-width:240px">Location</th>
+            <th style="min-width:110px">Mileage</th>
+            <th style="min-width:120px">Over</th>
+            <th style="min-width:240px">Lines</th>
+            <th style="min-width:140px">Class</th>
+            <th style="min-width:180px">Signals</th>
+            <th style="min-width:160px">Workstation</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="panelAdmin" class="card hidden">
+    <div class="controls">
+      <div class="two">
+        <div class="card" style="padding:14px">
+          <h3 style="margin:0 0 10px 0">Admin access (no auth, shared code)</h3>
+          <div class="field">
+            <label>Admin code</label>
+            <input id="adminCode" placeholder="Enter shared admin code" type="password" />
+            <div class="hint" style="margin-top:8px">Writes are via RPC that validates the code server-side.</div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="btnAdminUnlock">Unlock</button>
+            <span class="pill" id="adminState">Locked</span>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--line);margin:14px 0" />
+          <h3 style="margin:0 0 10px 0">Create / edit</h3>
+          <div class="hint">Select a bridge in Lookup then Edit, or create a new one.</div>
+          <div class="row" style="margin-top:10px"><button class="btn" id="btnNewBridge">New bridge</button></div>
+        </div>
+
+        <div class="card" style="padding:14px">
+          <h3 style="margin:0 0 10px 0">Admin notes</h3>
+          <div class="hint">Delete will fail if incidents exist for that bridge (by design).</div>
+          <div style="margin-top:10px" class="kpi">
+            <span class="pill"><strong>Reality:</strong> “No auth” works only if the code is kept semi-secret. Humans… struggle with that.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="sheetHead">
+      <div style="flex:1">
+        <h2 id="mTitle">Bridge</h2>
+        <div class="sub" id="mSub"></div>
+      </div>
+      <div class="row" style="margin-left:auto">
+        <button class="btn" id="btnCopy">Copy</button>
+        <button class="btn primary" id="btnStruck">Bridge Struck</button>
+        <button class="btn" id="btnClose">Close</button>
+      </div>
+    </div>
+    <div class="sheetBody">
+      <div class="two">
+        <div class="card" style="padding:14px">
+          <h3 style="margin:0 0 10px 0">Asset details</h3>
+          <div id="mFacts" class="kpi"></div>
+          <div id="mNotes" class="hint" style="margin-top:10px"></div>
+        </div>
+        <div class="card" style="padding:14px">
+          <h3 style="margin:0 0 10px 0">Admin</h3>
+          <div class="row">
+            <button class="btn" id="btnEdit">Edit</button>
+            <button class="btn danger" id="btnDelete">Delete</button>
+            <span class="pill" id="mAdminInfo">Locked</span>
+          </div>
+          <div class="hint" style="margin-top:10px">Edits replace all line rows for this bridge.</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px;margin-top:12px">
+        <h3 style="margin:0 0 10px 0">Lines, classification & protecting signals</h3>
+        <div style="overflow:auto">
+          <table>
+            <thead><tr><th>Line</th><th>Class</th><th>Protecting signals</th><th>Workstation</th></tr></thead>
+            <tbody id="mLines"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card hidden" id="editCard" style="padding:14px;margin-top:12px">
+        <h3 style="margin:0 0 10px 0">Edit bridge</h3>
+        <div class="two">
+          <div class="field"><label>ELR</label><input id="e_elr"/></div>
+          <div class="field"><label>Bridge number</label><input id="e_bridge_number"/></div>
+          <div class="field"><label>Bridge name</label><input id="e_bridge_name"/></div>
+          <div class="field"><label>Location</label><input id="e_location"/></div>
+          <div class="field"><label>Mileage</label><input id="e_mileage"/></div>
+          <div class="field"><label>Over</label><input id="e_over"/></div>
+          <div class="field"><label>Highway authority</label><input id="e_highway_authority"/></div>
+          <div class="field"><label>LV</label><input id="e_lv"/></div>
+          <div class="field"><label>BSE</label><input id="e_bse"/></div>
+          <div class="field"><label>Source</label><input id="e_source"/></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label>Notes</label><textarea id="e_notes" rows="3"></textarea></div>
+
+        <h4 style="margin:14px 0 8px 0">Line rows</h4>
+        <div class="hint">Add as many as needed.</div>
+        <div style="overflow:auto;margin-top:10px">
+          <table>
+            <thead><tr><th>Line</th><th>Class</th><th>Protecting signals</th><th>Workstation</th><th></th></tr></thead>
+            <tbody id="eLines"></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="btnAddLine">Add line row</button>
+          <button class="btn primary" id="btnSave">Save</button>
+          <button class="btn ghost" id="btnCancelEdit">Cancel</button>
+          <span class="hint" id="saveHint"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // PUT YOUR SUPABASE VALUES HERE:
+  const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
+
+  let sb = null;
+  let BRIDGES = [];
+  let LINES = [];
+  let ACTIVE = null;
+  let ADMIN_OK = false;
+  let ADMIN_CODE = "";
+
+  const $ = (id) => document.getElementById(id);
+  function toast(msg, ms=2400){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), ms); }
+  function setStatus(msg){ $("status").textContent = msg; }
+  function esc(s){ return (s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  function uniq(arr){ const out=[]; const seen=new Set(); for(const x of arr){ const k=(x||"").trim(); if(!k) continue; const kl=k.toLowerCase(); if(seen.has(kl)) continue; seen.add(kl); out.push(k);} return out; }
+
+  function summariseBridge(b){
+    const rows = LINES.filter(x => x.bridge_id === b.id);
+    const lines = uniq(rows.map(r => r.line_name));
+    const sigs = uniq(rows.flatMap(r => (r.protecting_signals||"").split(/\s*,\s*/).filter(Boolean)));
+    const classes = uniq(rows.map(r => r.line_classification));
+    const wss = uniq(rows.map(r => r.workstation));
+    const classSummary = classes.length===0 ? "" : (classes.length===1 ? classes[0] : "Mixed");
+    return {
+      lines: lines.join(" / "),
+      signals: sigs.slice(0,2).join(", ") + (sigs.length>2 ? ` +${sigs.length-2}` : ""),
+      workstation: wss.slice(0,2).join(" / ") + (wss.length>2 ? ` +${wss.length-2}` : ""),
+      classSummary
+    };
+  }
+
+  function matches(b, q){
+    if(!q) return true;
+    const s = q.toLowerCase().trim();
+    const sum = summariseBridge(b);
+    const hay = [b.elr,b.bridge_number,b.bridge_name,b.location,b.mileage,b.over,b.highway_authority,b.lv,b.bse,b.source,b.notes,sum.lines,sum.signals,sum.classSummary,sum.workstation]
+      .map(x => (x||"").toString().toLowerCase()).join(" | ");
+    return hay.includes(s);
+  }
+
+  function renderFilters(){
+    const overs = uniq(BRIDGES.map(b => b.over));
+    const auths = uniq(BRIDGES.map(b => b.highway_authority));
+    $("filterOver").innerHTML = `<option value="">Over (all)</option>` + overs.map(x => `<option>${esc(x)}</option>`).join("");
+    $("filterAuthority").innerHTML = `<option value="">Highway authority (all)</option>` + auths.map(x => `<option>${esc(x)}</option>`).join("");
+  }
+
+  function renderTable(){
+    const q = $("q").value || "";
+    const over = $("filterOver").value || "";
+    const auth = $("filterAuthority").value || "";
+    const rows = BRIDGES.filter(b => (!over || (b.over||"")===over) && (!auth || (b.highway_authority||"")===auth) && matches(b,q));
+
+    $("kpiBridges").innerHTML = `<strong>${rows.length}</strong> bridges`;
+    $("kpiLines").innerHTML = `<strong>${LINES.length}</strong> line rows`;
+
+    $("tbody").innerHTML = rows.map(b => {
+      const s = summariseBridge(b);
+      return `<tr data-id="${b.id}">
+        <td><strong>${esc(b.elr||"")}</strong></td>
+        <td><strong>${esc(b.bridge_number||"")}</strong></td>
+        <td>${esc(b.bridge_name||"")}</td>
+        <td>${esc(b.location||"")}</td>
+        <td class="small">${esc(b.mileage||"")}</td>
+        <td class="small">${esc(b.over||"")}</td>
+        <td class="small">${esc(s.lines)}</td>
+        <td class="small">${esc(s.classSummary)}</td>
+        <td class="small">${esc(s.signals)}</td>
+        <td class="small">${esc(s.workstation)}</td>
+      </tr>`;
+    }).join("");
+
+    [...document.querySelectorAll("#tbody tr")].forEach(tr => tr.addEventListener("click", ()=>openBridge(tr.dataset.id)));
+  }
+
+  function openBridge(id){
+    const b = BRIDGES.find(x => x.id === id);
+    if(!b) return;
+    ACTIVE = b;
+    $("mTitle").textContent = `${b.elr} ${b.bridge_number}`;
+    $("mSub").textContent = [b.bridge_name,b.location].filter(Boolean).join(" · ");
+
+    const facts = [["Mileage",b.mileage],["Over",b.over],["Authority",b.highway_authority],["LV",b.lv],["BSE",b.bse],["Source",b.source]]
+      .filter(([k,v]) => (v||"").trim() !== "")
+      .map(([k,v]) => `<span class="pill"><strong>${esc(k)}:</strong> ${esc(v)}</span>`).join("");
+
+    $("mFacts").innerHTML = facts || `<span class="pill"><strong>No extra fields</strong></span>`;
+    $("mNotes").textContent = (b.notes||"").trim() ? `Notes: ${b.notes}` : "";
+
+    const rows = LINES.filter(x => x.bridge_id === b.id);
+    $("mLines").innerHTML = rows.map(r => `<tr><td>${esc(r.line_name||"")}</td><td>${esc(r.line_classification||"")}</td><td>${esc(r.protecting_signals||"")}</td><td>${esc(r.workstation||"")}</td></tr>`).join("");
+
+    $("mAdminInfo").textContent = ADMIN_OK ? "Unlocked" : "Locked";
+    $("editCard").classList.add("hidden");
+    $("modal").classList.add("show");
+  }
+
+  function closeModal(){ $("modal").classList.remove("show"); ACTIVE=null; }
+
+  function copyText(b){
+    const rows = LINES.filter(x => x.bridge_id === b.id);
+    const out = [];
+    out.push(`BAD — ${b.elr} ${b.bridge_number}`);
+    if((b.bridge_name||"").trim()) out.push(b.bridge_name.trim());
+    if((b.location||"").trim()) out.push(b.location.trim());
+    if((b.mileage||"").trim()) out.push(`Mileage: ${b.mileage.trim()}`);
+    if((b.over||"").trim()) out.push(`Over: ${b.over.trim()}`);
+    if((b.highway_authority||"").trim()) out.push(`Authority: ${b.highway_authority.trim()}`);
+    if(rows.length){
+      out.push(""); out.push("Lines / Class / Signals:");
+      for(const r of rows){
+        out.push(`- ${(r.line_name||"(line?)")} ${r.line_classification?("= "+r.line_classification):""}${r.protecting_signals?(" | Signals: "+r.protecting_signals):""}${r.workstation?(" | WS: "+r.workstation):""}`);
+      }
+    }
+    if((b.notes||"").trim()){ out.push(""); out.push(`Notes: ${b.notes.trim()}`); }
+    return out.join("\n");
+  }
+
+  function ensureSupabase(){
+    if(SUPABASE_URL.includes("PASTE_") || SUPABASE_ANON_KEY.includes("PASTE_")){
+      setStatus("Set Supabase URL + anon key in HTML");
+      return false;
+    }
+    sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    setStatus("Connected");
+    return true;
+  }
+
+  async function loadData(){
+    if(!ensureSupabase()) return;
+    setStatus("Loading…");
+    const { data: bridges, error: e1 } = await sb.from("bad_bridges")
+      .select("id, elr, bridge_number, bridge_name, location, mileage, over, highway_authority, lv, bse, source, notes")
+      .order("elr", { ascending:true }).order("bridge_number", { ascending:true });
+    if(e1){ setStatus("Error"); toast(e1.message, 6000); return; }
+
+    const { data: lines, error: e2 } = await sb.from("bad_bridge_lines")
+      .select("id, bridge_id, workstation, line_name, protecting_signals, line_classification");
+    if(e2){ setStatus("Error"); toast(e2.message, 6000); return; }
+
+    BRIDGES = bridges || [];
+    LINES = lines || [];
+    renderFilters();
+    renderTable();
+    setStatus(`Loaded ${BRIDGES.length} bridges`);
+  }
+
+  function setTab(which){
+    $("tabLookup").classList.toggle("active", which==="lookup");
+    $("tabAdmin").classList.toggle("active", which==="admin");
+    $("panelLookup").classList.toggle("hidden", which!=="lookup");
+    $("panelAdmin").classList.toggle("hidden", which!=="admin");
+  }
+
+  async function adminUnlock(){
+    if(!ensureSupabase()) return;
+    const code = ($("adminCode").value||"").trim();
+    if(!code){ toast("Enter admin code"); return; }
+    const { data, error } = await sb.rpc("bad_is_admin", { code });
+    if(error){ toast(error.message, 6000); return; }
+    ADMIN_OK = !!data; ADMIN_CODE = ADMIN_OK ? code : "";
+    $("adminState").textContent = ADMIN_OK ? "Unlocked" : "Locked";
+    toast(ADMIN_OK ? "Admin unlocked" : "Invalid code");
+  }
+
+  function renderEditLines(rows){
+    $("eLines").innerHTML = rows.map((r,i)=>`
+      <tr data-idx="${i}">
+        <td><input data-k="line_name" value="${esc(r.line_name||"")}"/></td>
+        <td><input data-k="line_classification" value="${esc(r.line_classification||"")}"/></td>
+        <td><input data-k="protecting_signals" value="${esc(r.protecting_signals||"")}"/></td>
+        <td><input data-k="workstation" value="${esc(r.workstation||"")}"/></td>
+        <td><button class="btn danger" data-del="${i}">Remove</button></td>
+      </tr>`).join("");
+    [...document.querySelectorAll("#eLines button[data-del]")].forEach(btn=>btn.addEventListener("click",()=>{
+      const i = parseInt(btn.dataset.del,10); rows.splice(i,1);
+      if(rows.length===0) rows.push({line_name:"", line_classification:"", protecting_signals:"", workstation:""});
+      renderEditLines(rows);
+    }));
+    $("eLines")._rows = rows;
+  }
+
+  function openEdit(){
+    if(!ADMIN_OK){ toast("Admin locked"); return; }
+    $("editCard").classList.remove("hidden");
+    $("mAdminInfo").textContent = "Unlocked";
+    const b = ACTIVE;
+    $("e_elr").value = b.elr||"";
+    $("e_bridge_number").value = b.bridge_number||"";
+    $("e_bridge_name").value = b.bridge_name||"";
+    $("e_location").value = b.location||"";
+    $("e_mileage").value = b.mileage||"";
+    $("e_over").value = b.over||"";
+    $("e_highway_authority").value = b.highway_authority||"";
+    $("e_lv").value = b.lv||"";
+    $("e_bse").value = b.bse||"";
+    $("e_source").value = b.source||"";
+    $("e_notes").value = b.notes||"";
+    const rows = LINES.filter(x => x.bridge_id === b.id);
+    renderEditLines(rows.length?rows:[{line_name:"", line_classification:"", protecting_signals:"", workstation:""}]);
+  }
+
+  async function saveBridge(){
+    if(!ensureSupabase()) return;
+    if(!ADMIN_OK){ toast("Admin locked"); return; }
+
+    const bridge = {
+      id: ACTIVE.id||"",
+      elr: $("e_elr").value||"",
+      bridge_number: $("e_bridge_number").value||"",
+      bridge_name: $("e_bridge_name").value||"",
+      location: $("e_location").value||"",
+      mileage: $("e_mileage").value||"",
+      over: $("e_over").value||"",
+      highway_authority: $("e_highway_authority").value||"",
+      lv: $("e_lv").value||"",
+      bse: $("e_bse").value||"",
+      source: $("e_source").value||"",
+      notes: $("e_notes").value||""
+    };
+
+    const rows = $("eLines")._rows || [];
+    [...document.querySelectorAll("#eLines tr")].forEach((tr,idx)=>{
+      const row = rows[idx] || {};
+      [...tr.querySelectorAll("input")].forEach(inp => row[inp.dataset.k] = inp.value || "");
+      rows[idx] = row;
+    });
+
+    $("saveHint").textContent = "Saving…";
+    const { data, error } = await sb.rpc("bad_admin_save_bridge", {
+      admin_code: ADMIN_CODE,
+      bridge_json: bridge,
+      lines_json: rows
+    });
+    $("saveHint").textContent = "";
+    if(error){ toast(error.message, 7000); return; }
+
+    toast("Saved");
+    await loadData();
+    closeModal();
+    openBridge(data);
+  }
+
+  async function deleteBridge(){
+    if(!ensureSupabase()) return;
+    if(!ADMIN_OK){ toast("Admin locked"); return; }
+    if(!ACTIVE?.id){ toast("Select a saved bridge first"); return; }
+    if(!confirm(`Delete ${ACTIVE.elr} ${ACTIVE.bridge_number}? (Fails if incidents exist)`)) return;
+
+    const { error } = await sb.rpc("bad_admin_delete_bridge", { admin_code: ADMIN_CODE, v_id: ACTIVE.id });
+    if(error){ toast(error.message, 7000); return; }
+
+    toast("Deleted");
+    await loadData();
+    closeModal();
+  }
+
+  function startNewBridge(){
+    ACTIVE = { id:"", elr:"", bridge_number:"", bridge_name:"", location:"", mileage:"", over:"", highway_authority:"", lv:"", bse:"", source:"", notes:"" };
+    $("mTitle").textContent = "New bridge";
+    $("mSub").textContent = "Create asset";
+    $("mFacts").innerHTML = "";
+    $("mLines").innerHTML = "";
+    $("mNotes").textContent = "";
+    $("modal").classList.add("show");
+    openEdit();
+  }
+
+  $("btnRefresh").addEventListener("click", loadData);
+  $("q").addEventListener("input", renderTable);
+  $("filterOver").addEventListener("change", renderTable);
+  $("filterAuthority").addEventListener("change", renderTable);
+  $("tabLookup").addEventListener("click", ()=>setTab("lookup"));
+  $("tabAdmin").addEventListener("click", ()=>setTab("admin"));
+  $("btnClose").addEventListener("click", closeModal);
+  $("modal").addEventListener("click", (e)=>{ if(e.target === $("modal")) closeModal(); });
+
+  $("btnCopy").addEventListener("click", async ()=>{
+    if(!ACTIVE) return;
+    const txt = copyText(ACTIVE);
+    try{ await navigator.clipboard.writeText(txt); toast("Copied"); }
+    catch{ toast("Clipboard blocked. Check console.", 4000); console.log(txt); }
+  });
+
+  $("btnStruck").addEventListener("click", ()=>{
+    if(!ACTIVE) return;
+    window.open(`incident.html?bridge_id=${encodeURIComponent(ACTIVE.id)}`, "_blank");
+  });
+
+  $("btnAdminUnlock").addEventListener("click", adminUnlock);
+  $("btnNewBridge").addEventListener("click", startNewBridge);
+  $("btnEdit").addEventListener("click", openEdit);
+  $("btnCancelEdit").addEventListener("click", ()=>$("editCard").classList.add("hidden"));
+  $("btnAddLine").addEventListener("click", ()=>{
+    const r=$("eLines")._rows||[];
+    r.push({line_name:"", line_classification:"", protecting_signals:"", workstation:""});
+    renderEditLines(r);
+  });
+  $("btnSave").addEventListener("click", saveBridge);
+  $("btnDelete").addEventListener("click", deleteBridge);
+
+  loadData();
+</script>
+</body>
+</html>

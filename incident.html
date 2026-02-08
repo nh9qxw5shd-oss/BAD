@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BAD — Bridge Struck</title>
+  <link rel="icon" href="data:," />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+:root{
+  --bg:#050816;
+  --card:rgba(11,18,41,.86);
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --line:rgba(148,163,184,.22);
+  --shadow:0 20px 55px rgba(0,0,0,.45);
+  --radius:18px;
+  --focus:rgba(99,102,241,.25);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:radial-gradient(1200px 700px at 20% 10%,#0b1b4a 0%,var(--bg) 60%);
+  color:var(--text)
+}
+.wrap{max-width:980px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+h1{margin:0 0 6px 0;font-size:18px;letter-spacing:.2px}
+.muted{color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px 2px}
+input,textarea{
+  width:100%;
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(11,18,41,.55);
+  color:var(--text);
+  outline:none
+}
+input::placeholder,textarea::placeholder{color:rgba(148,163,184,.7)}
+input:focus,textarea:focus{box-shadow:0 0 0 3px var(--focus);border-color:rgba(99,102,241,.65)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--text);
+  padding:10px 12px;border-radius:14px;cursor:pointer;
+  font-weight:800;font-size:13px;display:inline-flex;gap:8px;align-items:center
+}
+.btn.primary{background:rgba(99,102,241,.25);border-color:rgba(99,102,241,.55)}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35)}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+th{color:var(--muted);font-size:12px;background:rgba(5,8,22,.55);position:sticky;top:0;backdrop-filter:blur(8px)}
+.pill{padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted);background:rgba(11,18,41,.55)}
+.toast{
+  position:fixed;right:14px;bottom:14px;
+  background:rgba(99,102,241,.25);
+  border:1px solid rgba(99,102,241,.55);
+  color:var(--text);
+  padding:12px 14px;border-radius:14px;
+  box-shadow:var(--shadow);display:none
+}
+.toast.show{display:block}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="title">Bridge Struck</h1>
+      <div class="muted" id="sub">Loading bridge…</div>
+      <div class="row" style="margin-top:10px">
+        <span class="pill" id="pOver"></span>
+        <span class="pill" id="pMileage"></span>
+        <span class="pill" id="pAuthority"></span>
+      </div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Line</th><th>Class</th><th>Signals</th><th>Workstation</th></tr></thead>
+          <tbody id="lines"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h1>Create / publish incident</h1>
+      <div class="muted">Publishing drives BAD-AS alerts.</div>
+
+      <div class="grid" style="margin-top:10px">
+        <div><label>FMS reference</label><input id="fms" placeholder="e.g. FMS-12345" /></div>
+        <div><label>CCIL reference</label><input id="ccil" placeholder="e.g. CCIL 2026/..." /></div>
+      </div>
+
+      <label>Summary</label>
+      <input id="summary" placeholder="Short headline" />
+      <label>Details</label>
+      <textarea id="details" rows="6" placeholder="Vehicle type/height, who reported, risks, actions taken…"></textarea>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnPublish">Publish alert</button>
+        <button class="btn" id="btnSaveDraft">Save draft</button>
+        <button class="btn danger" id="btnClose">Close incident</button>
+        <span class="muted" id="state"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL = "https://ungtmfwxqawkdiflmora.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZ3RtZnd4cWF3a2RpZmxtb3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMDY4NjQsImV4cCI6MjA3NzY4Mjg2NH0.Yaq0XfbbkwxJDUoiPCS7bLVBy70Wa-NOOWIxkpRRxdc";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  function toast(msg, ms=2600){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), ms); }
+  function qp(name){ return new URLSearchParams(location.search).get(name); }
+  function esc(s){ return (s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  let bridge=null;
+  let incidentId=null;
+
+  async function loadBridge(){
+    const bridge_id = qp("bridge_id");
+    if(!bridge_id){ $("sub").textContent = "Missing bridge_id"; return; }
+
+    const { data: b, error: e1 } = await supabase
+      .from("bad_bridges")
+      .select("id, elr, bridge_number, bridge_name, location, mileage, over, highway_authority")
+      .eq("id", bridge_id).single();
+    if(e1){ $("sub").textContent = e1.message; return; }
+    bridge=b;
+
+    $("title").textContent = `Bridge Struck — ${b.elr} ${b.bridge_number}`;
+    $("sub").textContent = [b.bridge_name,b.location].filter(Boolean).join(" · ");
+    $("pOver").textContent = b.over ? `Over: ${b.over}` : "Over: (blank)";
+    $("pMileage").textContent = b.mileage ? `Mileage: ${b.mileage}` : "Mileage: (blank)";
+    $("pAuthority").textContent = b.highway_authority ? `Authority: ${b.highway_authority}` : "Authority: (blank)";
+
+    const { data: lines, error: e2 } = await supabase
+      .from("bad_bridge_lines")
+      .select("line_name, line_classification, protecting_signals, workstation")
+      .eq("bridge_id", bridge_id);
+    if(e2){ toast(e2.message, 6000); return; }
+
+    $("lines").innerHTML = (lines||[]).map(r =>
+      `<tr><td>${esc(r.line_name||"")}</td><td>${esc(r.line_classification||"")}</td><td>${esc(r.protecting_signals||"")}</td><td>${esc(r.workstation||"")}</td></tr>`
+    ).join("");
+  }
+
+  async function createIncident(publish){
+    if(!bridge) return;
+    const payload = {
+      bridge_id: bridge.id,
+      status: "open",
+      summary: $("summary").value || null,
+      details: $("details").value || null,
+      fms_ref: $("fms").value || null,
+      ccil_ref: $("ccil").value || null,
+      time_struck: new Date().toISOString(),
+      published_at: publish ? new Date().toISOString() : null
+    };
+
+    const { data, error } = await supabase
+      .from("bad_incidents")
+      .insert(payload).select("id").single();
+    if(error){ toast(error.message, 8000); return; }
+    incidentId=data.id;
+    $("state").textContent = publish ? `Published (${incidentId})` : `Draft (${incidentId})`;
+    toast(publish ? "Alert published" : "Draft saved");
+  }
+
+  async function closeIncident(){
+    if(!incidentId){ toast("No incident created yet"); return; }
+    const { error } = await sb.from("bad_incidents").update({ status:"closed" }).eq("id", incidentId);
+    if(error){ toast(error.message, 6000); return; }
+    $("state").textContent = "Closed";
+    toast("Incident closed");
+  }
+
+  $("btnPublish").addEventListener("click", ()=>createIncident(true));
+  $("btnSaveDraft").addEventListener("click", ()=>createIncident(false));
+  $("btnClose").addEventListener("click", closeIncident);
+  loadBridge();
+</script>
+</body>
+</html>
